@@ -28,6 +28,9 @@ func main() {
 	}
 
 	chanel, _, err := pubsub.DeclareAndBind(connection, routing.ExchangePerilDirect, fmt.Sprintf("%s.%s", routing.PauseKey, username), routing.PauseKey, pubsub.Transient)
+	if err != nil {
+		log.Fatalf("couldn't make a chanel %v", err)
+	}
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)

@@ -12,17 +12,17 @@ const (
 func DeclareAndBind(conn *amqp.Connection, exchange, queueName, key string, queueType SimpleQueueType) (*amqp.Channel, amqp.Queue, error) {
 	ch, err := conn.Channel()
 	if err != nil {
-		return ch, amqp.Queue{}, err
+		return nil, amqp.Queue{}, err
 	}
 
 	queue, err := ch.QueueDeclare(queueName, queueType == Durable, queueType == Transient, queueType == Transient, false, nil)
 	if err != nil {
-		return ch, amqp.Queue{}, err
+		return nil, amqp.Queue{}, err
 	}
 
 	err = ch.QueueBind(queue.Name, key, exchange, false, nil)
 	if err != nil {
-		return ch, amqp.Queue{}, err
+		return nil, amqp.Queue{}, err
 	}
 
 	return ch, queue, nil

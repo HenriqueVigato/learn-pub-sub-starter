@@ -3,9 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
 
+	"github.com/bootdotdev/learn-pub-sub-starter/internal/gamelogic"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/pubsub"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/routing"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -28,16 +27,32 @@ func main() {
 		log.Fatalf("failed to create a chanel err: %v", err)
 	}
 
-	err = pubsub.PublishJSON(ch, routing.ExchangePerilDirect, routing.PauseKey, routing.PlayingState{IsPaused: true})
-	if err != nil {
-		log.Fatalf("Error can't publis the data %v", err)
+	gamelogic.PrintServerHelp()
+
+	for {
+		userInput := gamelogic.GetInput()
+		if len(userInput) == 0 {
+			continue
+		}
+
+		switch userInput[0] {
+		case "pause":
+			err = pubsub.PublishJSON(ch, routing.ExchangePerilDirect, routing.PauseKey, routing.PlayingState{IsPaused: true})
+			if err != nil {
+				log.Printf("Error can't publish the data %v", err)
+			}
+			fmt.Printf("\nPausing the game...\n")
+		case "resume":
+			err = pubsub.PublishJSON(ch, routing.ExchangePerilDirect, routing.PauseKey, routing.PlayingState{IsPaused: false})
+			if err != nil {
+				log.Fatalf("Error can't publis the data %v", err)
+			}
+			fmt.Printf("\nReturning the game...\n")
+		case "quit":
+			fmt.Printf("\nClosing RabbitMQ connection ...\n")
+			return
+		default:
+			fmt.Println("I don't understand the command")
+		}
 	}
-
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt)
-	<-signalChan
-
-	fmt.Printf("\nClosing RabbitMQ connection ...\n")
-	connection.Close()
-	fmt.Println("Closed")
 }
