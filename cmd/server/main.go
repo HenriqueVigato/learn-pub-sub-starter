@@ -22,7 +22,7 @@ func main() {
 
 	fmt.Println("RabbitMq connection success")
 
-	ch, err := connection.Channel()
+	ch, _, err := pubsub.DeclareAndBind(connection, routing.ExchangePerilTopic, "game_logs", routing.GameLogSlug, pubsub.Durable)
 	if err != nil {
 		log.Fatalf("failed to create a chanel err: %v", err)
 	}
