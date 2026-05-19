@@ -24,14 +24,20 @@ func main() {
 	if err != nil {
 		log.Fatalf("Couldn't get user name %v", err)
 	}
-
-	channel, _, err := pubsub.DeclareAndBind(connection, routing.ExchangePerilDirect, fmt.Sprintf("%s.%s", routing.PauseKey, username), routing.PauseKey, pubsub.Transient)
-	if err != nil {
-		log.Fatalf("couldn't make a chanel %v", err)
-	}
-	defer channel.Close()
+	// CLEANUP: delete this temp code after validade the definitive code
+	// channel, _, err := pubsub.DeclareAndBind(connection, routing.ExchangePerilDirect, fmt.Sprintf("%s.%s", routing.PauseKey, username), routing.PauseKey, pubsub.Transient)
+	// if err != nil {
+	// 	log.Fatalf("couldn't make a chanel %v", err)
+	// }
+	// defer channel.Close()
 
 	gameState := gamelogic.NewGameState(username)
+
+	err = pubsub.SubscribeJSON(connection, routing.ExchangePerilDirect, fmt.Sprintf("pause.%s", username), routing.PauseKey, pubsub.Transient, handlerPause(gameState))
+	if err != nil {
+		log.Fatalf("Couldn't Bind the connection with SubscribeJSON, %v", err)
+	}
+
 	for {
 		userInput := gamelogic.GetInput()
 		if len(userInput) == 0 {
