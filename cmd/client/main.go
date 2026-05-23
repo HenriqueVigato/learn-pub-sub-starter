@@ -24,18 +24,22 @@ func main() {
 	if err != nil {
 		log.Fatalf("Couldn't get user name %v", err)
 	}
-	// CLEANUP: delete this temp code after validade the definitive code
-	// channel, _, err := pubsub.DeclareAndBind(connection, routing.ExchangePerilDirect, fmt.Sprintf("%s.%s", routing.PauseKey, username), routing.PauseKey, pubsub.Transient)
-	// if err != nil {
-	// 	log.Fatalf("couldn't make a chanel %v", err)
-	// }
-	// defer channel.Close()
-
 	gameState := gamelogic.NewGameState(username)
+
+	publishCH, err := connection.Channel()
+	if err != nil {
+		log.Fatalf("could not create channel: %v", err)
+	}
+	defer publishCH.Close()
 
 	err = pubsub.SubscribeJSON(connection, routing.ExchangePerilDirect, fmt.Sprintf("pause.%s", username), routing.PauseKey, pubsub.Transient, handlerPause(gameState))
 	if err != nil {
 		log.Fatalf("Couldn't Bind the connection with SubscribeJSON, %v", err)
+	}
+
+	err = pubsub.SubscribeJSON(connection, routing.ExchangePerilTopic, fmt.Sprintf("army_moves.%s", username), "army_moves.*", pubsub.Transient, handlerMove(gameState))
+	if err != nil {
+		log.Fatalf("Couldn't subscribe to other users moves: %v", err)
 	}
 
 	for {
@@ -51,26 +55,37 @@ func main() {
 				fmt.Printf("\n Erro: %v\n", err)
 				continue
 			}
+
 		case "move":
 			if len(userInput) < 3 {
 				fmt.Println("the move command should have 2 options")
 				continue
 			}
-			_, err := gameState.CommandMove(userInput)
+			armyMove, err := gameState.CommandMove(userInput)
 			if err != nil {
 				fmt.Printf("\n Erro: %v\n", err)
 				continue
 			}
-			fmt.Println("Move succes")
+			err = pubsub.PublishJSON(publishCH, routing.ExchangePerilTopic, fmt.Sprintf("army_moves.%s", username), armyMove)
+			if err != nil {
+				fmt.Printf("error publishing move: %v\n", err)
+				continue
+			}
+			fmt.Println("Move published successfully")
+
 		case "status":
 			gameState.CommandStatus()
+
 		case "help":
 			gamelogic.PrintClientHelp()
+
 		case "spam":
 			fmt.Println("Spamming not allowed yet!")
+
 		case "quit":
 			gamelogic.PrintQuit()
 			return
+
 		default:
 			fmt.Println("Commando invalide")
 		}
