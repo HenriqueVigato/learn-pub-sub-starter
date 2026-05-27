@@ -57,6 +57,8 @@ func SubscribeJSON[T any](conn *amqp.Connection, exchange, queueName, key string
 			case NackRequeue:
 				msg.Nack(false, true)
 				log.Print("Message requeue\n> ")
+			case NackDiscard:
+				msg.Nack(false, false)
 				log.Print("Message Discard\n> ")
 			}
 		}
