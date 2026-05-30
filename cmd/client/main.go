@@ -13,7 +13,7 @@ import (
 func main() {
 	fmt.Println("Starting Peril client...")
 
-	rabbitURL := "amqp://guest:guest@192.168.1.130:5672/"
+	rabbitURL := "amqp://guest:guest@localhost:5672/"
 	connection, err := amqp.Dial(rabbitURL)
 	if err != nil {
 		log.Fatalf("failed to connect to rabbitmq %v", err)
@@ -37,9 +37,14 @@ func main() {
 		log.Fatalf("Couldn't Bind the connection with SubscribeJSON, %v", err)
 	}
 
-	err = pubsub.SubscribeJSON(connection, routing.ExchangePerilTopic, fmt.Sprintf("army_moves.%s", username), "army_moves.*", pubsub.Transient, handlerMove(gameState))
+	err = pubsub.SubscribeJSON(connection, routing.ExchangePerilTopic, fmt.Sprintf("army_moves.%s", username), "army_moves.*", pubsub.Transient, handlerMove(gameState, publishCH))
 	if err != nil {
 		log.Fatalf("Couldn't subscribe to other users moves: %v", err)
+	}
+
+	err = pubsub.SubscribeJSON(connection, routing.ExchangePerilTopic, "war", fmt.Sprintf("%s.*", routing.WarRecognitionsPrefix), pubsub.Durable, handlerWar(gameState))
+	if err != nil {
+		log.Fatalf("couldn't subscribe to war channel %v", err)
 	}
 
 	for {
