@@ -31,7 +31,7 @@ func handlerMove(gs *gamelogic.GameState, amqpChannel *amqp.Channel) func(gamelo
 				log.Printf("couldn't Publish war message: %v ", err)
 				return pubsub.NackRequeue
 			}
-			return pubsub.NackRequeue
+			return pubsub.Ack
 		case gamelogic.MoveOutcomeSamePlayer:
 			return pubsub.NackDiscard
 		default:
