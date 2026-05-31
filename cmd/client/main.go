@@ -42,7 +42,7 @@ func main() {
 		log.Fatalf("Couldn't subscribe to other users moves: %v", err)
 	}
 
-	err = pubsub.SubscribeJSON(connection, routing.ExchangePerilTopic, "war", fmt.Sprintf("%s.*", routing.WarRecognitionsPrefix), pubsub.Durable, handlerWar(gameState))
+	err = pubsub.SubscribeJSON(connection, routing.ExchangePerilTopic, "war", fmt.Sprintf("%s.*", routing.WarRecognitionsPrefix), pubsub.Durable, handlerWar(gameState, publishCH))
 	if err != nil {
 		log.Fatalf("couldn't subscribe to war channel %v", err)
 	}
