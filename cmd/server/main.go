@@ -27,6 +27,8 @@ func main() {
 		log.Fatalf("failed to create a chanel err: %v", err)
 	}
 
+	err = pubsub.SubscribeGob(connection, routing.ExchangePerilTopic, "game_logs", fmt.Sprintf("%s.*", routing.GameLogSlug), pubsub.Durable, handlerLog(gameState))
+
 	gamelogic.PrintServerHelp()
 
 	for {
