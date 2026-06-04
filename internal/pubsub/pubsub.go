@@ -61,7 +61,7 @@ func SubscribeJSON[T any](conn *amqp.Connection, exchange, queueName, key string
 	return subscribe(conn, exchange, queueName, key, queueType, handler, JSONUnmarshaller)
 }
 
-func SubscribeGob[T any](conn *amqp.Connection, exchange, queueName, key string, simpleQueueTyepe SimpleQueueType, handler func(T) AckType) error {
+func SubscribeGob[T any](conn *amqp.Connection, exchange, queueName, key string, simpleQueueType SimpleQueueType, handler func(T) AckType) error {
 	gobUnmarshaller := func(data []byte) (T, error) {
 		response := bytes.NewBuffer(data)
 		decode := gob.NewDecoder(response)
@@ -73,7 +73,7 @@ func SubscribeGob[T any](conn *amqp.Connection, exchange, queueName, key string,
 		}
 		return dataGob, nil
 	}
-	return subscribe(conn, exchange, queueName, key, simpleQueueTyepe, handler, gobUnmarshaller)
+	return subscribe(conn, exchange, queueName, key, simpleQueueType, handler, gobUnmarshaller)
 }
 
 func subscribe[T any](conn *amqp.Connection, exchange, queueName, key string, simpleQueueType SimpleQueueType, handler func(T) AckType, unmarshaller func([]byte) (T, error)) error {
