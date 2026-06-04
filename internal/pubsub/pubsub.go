@@ -82,6 +82,7 @@ func subscribe[T any](conn *amqp.Connection, exchange, queueName, key string, si
 		return err
 	}
 
+	amqpChannel.Qos(10, 0, false)
 	msgChannel, err := amqpChannel.Consume(amqpQueue.Name, "", false, false, false, false, nil)
 	if err != nil {
 		return err
